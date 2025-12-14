@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.1
+    rev: v0.14.9
     hooks:
       - id: ruff-format
       - id: ruff-check
@@ -19,7 +19,7 @@ repos:
 
   - repo: https://github.com/rbubley/mirrors-prettier
     # fork of oficial repo which support is discontinued
-    rev: v3.6.2
+    rev: v3.7.4
     hooks:
       - id: prettier
         types_or: [markdown, yaml, json, dockerfile, shell, toml, sql]
