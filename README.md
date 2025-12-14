@@ -1,7 +1,2 @@
-
-
-
-*SETUP*
-uv venv
-Linux source .venv/bin/activate
-Windows source .venv/Scripts/activate
+_SETUP_ uv venv Linux source .venv/bin/activate Windows source
+.venv/Scripts/activate
