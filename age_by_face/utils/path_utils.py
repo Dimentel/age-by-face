@@ -1,7 +1,9 @@
 from pathlib import Path
 
+from age_by_face.types import Directory, File
 
-def ensure_path(path: str | Path) -> Path:
+
+def ensure_path(path: Directory | File) -> Path:
     """
     Ensure the input is a Path object.
 
