@@ -39,16 +39,16 @@ class AgeRegressionModule(l.LightningModule):
         # Save hyperparameters
         self.save_hyperparameters(ignore=["model"])
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """Forward pass through the model.
 
         Args:
-            x: Input tensor of shape [batch_size, channels, height, width]
+            inputs: Input tensor of shape [batch_size, channels, height, width]
 
         Returns:
             Age predictions tensor of shape [batch_size, 1]
         """
-        return self.model(x)
+        return self.model(inputs)
 
     def training_step(self, batch):
         """Training step with MSE loss."""
