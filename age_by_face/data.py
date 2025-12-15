@@ -149,9 +149,9 @@ class AgeDataModule(l.LightningDataModule):
     def __init__(  # noqa: PLR0913
         self,
         data_dir: Directory,
-        train_csv: File = "gt_train.csv",
-        val_csv: File = "gt_valid.csv",
-        test_csv: File = "gt_test.csv",
+        train_csv: File = "gt_avg_train.csv",
+        val_csv: File = "gt_avg_valid.csv",
+        test_csv: File = "gt_avg_test.csv",
         train_batch_size: int = 32,
         predict_batch_size: int = 64,
         num_workers: int = 4,
@@ -261,7 +261,9 @@ def check_train_dataset(data_dir: Directory, train_dir: Directory) -> None:
     if not train_dir.is_dir():
         raise ValueError(f"{train_dir} is not directory")
 
-    dataset = init_dataset(csv_path=data_dir / "gt_train.csv", images_dir=train_dir, is_train=True)
+    dataset = init_dataset(
+        csv_path=data_dir / "gt_avg_train.csv", images_dir=train_dir, is_train=True
+    )
 
     print(f"Dataset size: {len(dataset)}")
     print(
