@@ -1,5 +1,6 @@
 import lightning as l
 import torch
+from omegaconf import DictConfig
 from torchmetrics.regression import MeanAbsoluteError, MeanAbsolutePercentageError, MeanSquaredError
 
 
@@ -9,19 +10,16 @@ class AgeRegressionModule(l.LightningModule):
     def __init__(
         self,
         model: torch.nn.Module,
-        learning_rate: float = 1e-3,
-        weight_decay: float = 1e-5,
+        cfg: DictConfig,
     ):
         """
         Args:
             model: PyTorch model for age regression
-            learning_rate: Learning rate for optimizer
-            weight_decay: Weight decay for AdamW optimizer
+            cfg: Hydra configuration DictConfig
         """
         super().__init__()
         self.model = model
-        self.learning_rate = learning_rate
-        self.weight_decay = weight_decay
+        self.cfg = cfg
 
         # Loss function for regression
         self.criterion = torch.nn.MSELoss()
@@ -37,7 +35,7 @@ class AgeRegressionModule(l.LightningModule):
         self.test_mse = MeanSquaredError()
 
         # Save hyperparameters
-        self.save_hyperparameters(ignore=["model"])
+        self.save_hyperparameters(ignore=["model", "cfg"])
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """Forward pass through the model.
@@ -86,7 +84,6 @@ class AgeRegressionModule(l.LightningModule):
             loss,
             prog_bar=True,
             logger=True,
-            on_step=True,
             on_epoch=True,
         )
 
@@ -173,29 +170,41 @@ class AgeRegressionModule(l.LightningModule):
 
     def configure_optimizers(self):
         """Configure optimizer and learning rate scheduler."""
-        optimizer = torch.optim.AdamW(
+        # Получаем параметры оптимизатора из конфига
+        optimizer_cfg = self.cfg.training.optimizer
+        # Создаём оптимизатор
+        optimizer = getattr(torch.optim, optimizer_cfg._target_.split(".")[-1])(
             self.parameters(),
-            lr=self.learning_rate,
-            weight_decay=self.weight_decay,
+            lr=float(optimizer_cfg.lr),
+            weight_decay=float(optimizer_cfg.weight_decay),
+            betas=tuple(optimizer_cfg.betas),
         )
 
-        # learning rate scheduler
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer,
-            mode="min",
-            factor=0.5,
-            patience=5,
-        )
+        # Проверяем есть ли scheduler в конфиге
+        if hasattr(self.cfg.training, "lr_scheduler"):
+            scheduler_cfg = self.cfg.training.lr_scheduler
 
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                "monitor": "val_loss",
-                "interval": "epoch",
-                "frequency": 1,
-            },
-        }
+            # Создаём scheduler
+            scheduler = getattr(torch.optim.lr_scheduler, scheduler_cfg._target_.split(".")[-1])(
+                optimizer,
+                mode=scheduler_cfg.mode,
+                factor=scheduler_cfg.factor,
+                patience=scheduler_cfg.patience,
+                verbose=scheduler_cfg.verbose if hasattr(scheduler_cfg, "verbose") else False,
+            )
+
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {
+                    "scheduler": scheduler,
+                    "monitor": scheduler_cfg.get("monitor", "val_loss"),
+                    "interval": "epoch",
+                    "frequency": 1,
+                },
+            }
+
+        # Если scheduler не указан, возвращаем только optimizer
+        return optimizer
 
     def get_age_statistics(self) -> dict:
         """Get statistics about predictions (for analysis).

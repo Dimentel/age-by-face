@@ -1,7 +1,7 @@
 import lightning as l
-import matplotlib.pyplot as plt
 import pandas as pd
 import torch
+from omegaconf import DictConfig
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -67,37 +67,15 @@ class AgeDataset(Dataset):
         return image, age
 
 
-def get_train_transforms() -> transforms.Compose:
-    """Get transforms for training data with augmentations."""
-    return transforms.Compose(
-        [
-            transforms.Resize((224, 224)),
-            transforms.RandomRotation(degrees=15),
-            transforms.RandomHorizontalFlip(p=0.2),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),  # [-1, 1] range
-        ]
-    )
-
-
-def get_val_transforms() -> transforms.Compose:
-    """Get transforms for validation/test/predict data (no augmentations)."""
-    return transforms.Compose(
-        [
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),  # [-1, 1] range
-        ]
-    )
-
-
-def init_dataset(csv_path: File, images_dir: Directory, is_train: bool = False) -> AgeDataset:
+def init_dataset(
+    csv_path: File, images_dir: Directory, transformer: transforms.Compose
+) -> AgeDataset:
     """Initialize age dataset with appropriate transforms.
 
     Args:
         csv_path: Path to CSV file
         images_dir: Directory with images
-        is_train: Whether to use training transforms (with augmentations)
+        transformer: Optional torchvision transforms to apply
 
     Returns:
         AgeDataset instance
@@ -115,9 +93,11 @@ def init_dataset(csv_path: File, images_dir: Directory, is_train: bool = False) 
     if not images_dir.is_dir():
         raise ValueError(f"Images directory is not directory: {images_dir}")
 
-    transformer = get_train_transforms() if is_train else get_val_transforms()
-
     return AgeDataset(csv_path, images_dir, transformer)
+
+
+def init_predict_dataset():
+    raise NotImplementedError("Predict stage is not implemented yet")
 
 
 def init_dataloader(
@@ -128,8 +108,8 @@ def init_dataloader(
     Args:
         dataset: Dataset for dataloader
         batch_size: Batch size
-        shuffle: Whether to shuffle data
-        num_workers: Number of workers for data loading
+        shuffle: Whether to shuffle dataset
+        num_workers: Number of workers for dataset loading
 
     Returns:
         DataLoader instance
@@ -139,49 +119,33 @@ def init_dataloader(
     )
 
 
-def init_predict_dataset():
-    raise NotImplementedError("Predict stage is not implemented yet")
-
-
 class AgeDataModule(l.LightningDataModule):
     """LightningDataModule for age regression dataset."""
 
-    def __init__(  # noqa: PLR0913
-        self,
-        data_dir: Directory,
-        train_csv: File = "gt_avg_train.csv",
-        val_csv: File = "gt_avg_valid.csv",
-        test_csv: File = "gt_avg_test.csv",
-        train_batch_size: int = 32,
-        predict_batch_size: int = 64,
-        num_workers: int = 4,
-        train_dir: Directory = "train",
-        val_dir: Directory = "valid",
-        test_dir: Directory = "test",
-        predict_dir: Directory = "predict",
-    ):
+    def __init__(self, dataset_cfg: DictConfig) -> None:
         super().__init__()
+        self.cfg = dataset_cfg
 
-        self.data_dir = ensure_path(data_dir)
+        self.data_dir = ensure_path(self.cfg.data_dir)
 
         # CSV file names
-        self.train_csv = train_csv
-        self.val_csv = val_csv
-        self.test_csv = test_csv
+        self.train_csv = self.data_dir / self.cfg.train_csv
+        self.val_csv = self.data_dir / self.cfg.val_csv
+        self.test_csv = self.data_dir / self.cfg.test_csv
 
         # Batch sizes
-        self.train_batch_size = train_batch_size
-        self.val_batch_size = predict_batch_size
-        self.test_batch_size = predict_batch_size
+        self.train_batch_size = self.cfg.train_batch_size
+        self.val_batch_size = self.cfg.predict_batch_size
+        self.test_batch_size = self.cfg.predict_batch_size
 
         # Other parameters
-        self.num_workers = num_workers
+        self.num_workers = self.cfg.num_workers
 
         # Image directories
-        self.train_dir = train_dir
-        self.val_dir = val_dir
-        self.test_dir = test_dir
-        self.predict_dir = predict_dir
+        self.train_dir = self.data_dir / self.cfg.train_dir_name
+        self.val_dir = self.data_dir / self.cfg.val_dir_name
+        self.test_dir = self.data_dir / self.cfg.test_dir_name
+        self.predict_dir = self.data_dir / self.cfg.predict_dir_name
 
         # Datasets (will be initialized in setup)
         self.train_dataset = None
@@ -189,31 +153,54 @@ class AgeDataModule(l.LightningDataModule):
         self.test_dataset = None
         self.predict_dataset = None
 
+        self.train_transformer = transforms.Compose(
+            [
+                transforms.Resize(tuple(dataset_cfg.image_size)),
+                transforms.RandomRotation(degrees=dataset_cfg.random_rotation_angle),
+                transforms.RandomHorizontalFlip(p=dataset_cfg.random_horizontal_flip_prob),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=dataset_cfg.normalize_means, std=dataset_cfg.normalize_stds
+                ),  # [-1, 1] range
+            ]
+        )
+
+        self.val_transformer = transforms.Compose(
+            [
+                transforms.Resize(tuple(dataset_cfg.image_size)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=dataset_cfg.normalize_means, std=dataset_cfg.normalize_stds
+                ),  # [-1, 1] range
+            ]
+        )
+
     def setup(self, stage: str | None = None) -> None:
         """Set up datasets for different stages."""
+
         if stage == "fit" or stage is None:
             self.train_dataset = init_dataset(
-                csv_path=self.data_dir / self.train_csv,
-                images_dir=self.data_dir / self.train_dir,
-                is_train=True,
+                csv_path=self.train_csv,
+                images_dir=self.train_dir,
+                transformer=self.train_transformer,
             )
             self.val_dataset = init_dataset(
-                csv_path=self.data_dir / self.val_csv,
-                images_dir=self.data_dir / self.val_dir,
-                is_train=False,
+                csv_path=self.val_csv,
+                images_dir=self.val_dir,
+                transformer=self.val_transformer,
             )
         elif stage == "validate" or stage is None:
             if self.val_dataset is None:
                 self.val_dataset = init_dataset(
-                    csv_path=self.data_dir / self.val_csv,
-                    images_dir=self.data_dir / self.val_dir,
-                    is_train=False,
+                    csv_path=self.val_csv,
+                    images_dir=self.val_dir,
+                    transformer=self.val_transformer,
                 )
         elif stage == "test":
             self.test_dataset = init_dataset(
-                csv_path=self.data_dir / self.test_csv,
-                images_dir=self.data_dir / self.test_dir,
-                is_train=False,
+                csv_path=self.test_csv,
+                images_dir=self.test_dir,
+                transformer=self.val_transformer,
             )
         elif stage == "predict":
             raise NotImplementedError("Predict stage is not implemented yet")
@@ -244,41 +231,3 @@ class AgeDataModule(l.LightningDataModule):
 
     def predict_dataloader(self):
         raise NotImplementedError("Predict stage is not implemented yet")
-
-
-def check_train_dataset(data_dir: Directory, train_dir: Directory) -> None:
-    """Test function to verify dataset loading."""
-
-    # Преобразуем к Path
-    data_dir = ensure_path(data_dir)
-    if not data_dir.exists():
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
-    if not data_dir.is_dir():
-        raise ValueError(f"{data_dir} is not directory")
-    train_dir = data_dir / train_dir
-    if not train_dir.exists():
-        raise FileNotFoundError(f"Train directory not found: {train_dir}")
-    if not train_dir.is_dir():
-        raise ValueError(f"{train_dir} is not directory")
-
-    dataset = init_dataset(
-        csv_path=data_dir / "gt_avg_train.csv", images_dir=train_dir, is_train=True
-    )
-
-    print(f"Dataset size: {len(dataset)}")
-    print(
-        f"Age stats: min={dataset.ages.min()}, max={dataset.ages.max()}, "
-        f"mean={dataset.ages.mean():.2f}"
-    )
-
-    # Show first sample
-    img, age = dataset[0]
-    print(f"Image shape: {img.shape}, Age: {age.item()}")
-
-    # Denormalize for display
-    img_display = img * 0.5 + 0.5  # [-1, 1] -> [0, 1]
-    img_display = img_display.permute(1, 2, 0).numpy()
-
-    plt.imshow(img_display)
-    plt.title(f"Age: {age.item()}")
-    plt.show()

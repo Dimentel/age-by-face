@@ -1,0 +1,27 @@
+defaults:
+  - dataset: dataset
+  - model: resnet18
+  - training: training
+  - logging: logging
+  - _self_
+
+  # Глобальные настройки (можно указать через CLI)
+seed: 5
+
+# Настройки проекта (для информации, могут использоваться в логгерах)
+project:
+  name: "age-by-face"
+  description: "Age estimation from face images"
+
+# Настройки Hydra для управления запусками
+hydra:
+  # Создаёт папки для логов и запусков (одиночные)
+  run:
+    dir: ./runs/${model}_${now:%Y-%m-%d_%H-%M-%S}
+  # Создаёт папки для логов и запусков (с несколькими запусками, например, по сетке параметров)
+  sweep:
+    dir: ./multiruns/${model}_${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}
+
+  # Чтоб отключить создание .hydra папки
+  # output_subdir: null

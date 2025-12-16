@@ -1,0 +1,14 @@
+# MLflow logging
+mlflow:
+  enabled: true
+  tracking_uri: "http://127.0.0.1:8080"
+  experiment_name: "${project.name}"
+  run_name: "${model.type}_${now:%Y-%m-%d_%H-%M-%S}"
+  log_model: true
+  tags:
+    project: "${project.name}"
+    model_type: "${model.type}"
+    run_id: "${hydra:job.override_dirname,${hydra:job.name}}"
+
+  # Дополнительные настройки MLflow
+  create_experiment_if_not_exists: true
