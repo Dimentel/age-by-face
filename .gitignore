@@ -240,3 +240,4 @@ cython_debug/
 .idea/
 
 data/
+/data
