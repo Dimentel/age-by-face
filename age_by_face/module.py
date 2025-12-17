@@ -34,8 +34,24 @@ class AgeRegressionModule(l.LightningModule):
         self.test_mape = MeanAbsolutePercentageError()
         self.test_mse = MeanSquaredError()
 
-        # Save hyperparameters
-        self.save_hyperparameters(ignore=["model", "cfg"])
+        # Save hyperparameters to checkpoint
+        self.save_hyperparameters(
+            {
+                "optimizer": {
+                    "lr": float(self.cfg.training.optimizer.lr),
+                    "weight_decay": float(self.cfg.training.optimizer.weight_decay),
+                    "betas": tuple(self.cfg.training.optimizer.betas),
+                },
+                "scheduler": {
+                    "mode": str(getattr(self.cfg.training.lr_scheduler, "mode", "min")),
+                    "factor": float(getattr(self.cfg.training.lr_scheduler, "factor", 0.5)),
+                    "patience": int(getattr(self.cfg.training.lr_scheduler, "patience", 5)),
+                },
+                "model_type": str(getattr(self.cfg.model, "type", "unknown")),
+                "image_size": tuple(getattr(self.cfg.dataset, "image_size", (224, 224))),
+                "seed": int(getattr(self.cfg, "seed", 0)),
+            }
+        )
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """Forward pass through the model.
@@ -173,7 +189,7 @@ class AgeRegressionModule(l.LightningModule):
         # Получаем параметры оптимизатора из конфига
         optimizer_cfg = self.cfg.training.optimizer
         # Создаём оптимизатор
-        optimizer = getattr(torch.optim, optimizer_cfg._target_.split(".")[-1])(
+        optimizer = torch.optim.AdamW(
             self.parameters(),
             lr=float(optimizer_cfg.lr),
             weight_decay=float(optimizer_cfg.weight_decay),
@@ -181,30 +197,31 @@ class AgeRegressionModule(l.LightningModule):
         )
 
         # Проверяем есть ли scheduler в конфиге
-        if hasattr(self.cfg.training, "lr_scheduler"):
-            scheduler_cfg = self.cfg.training.lr_scheduler
+        scheduler_cfg = getattr(self.cfg.training, "lr_scheduler", None)
+        if scheduler_cfg is None:
+            return optimizer
 
-            # Создаём scheduler
-            scheduler = getattr(torch.optim.lr_scheduler, scheduler_cfg._target_.split(".")[-1])(
-                optimizer,
-                mode=scheduler_cfg.mode,
-                factor=scheduler_cfg.factor,
-                patience=scheduler_cfg.patience,
-                verbose=scheduler_cfg.verbose if hasattr(scheduler_cfg, "verbose") else False,
-            )
-
-            return {
-                "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": scheduler_cfg.get("monitor", "val_loss"),
-                    "interval": "epoch",
-                    "frequency": 1,
-                },
-            }
-
-        # Если scheduler не указан, возвращаем только optimizer
-        return optimizer
+        # Создаём scheduler
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode=str(scheduler_cfg.mode),
+            factor=float(scheduler_cfg.factor),
+            patience=int(scheduler_cfg.patience),
+            threshold=float(getattr(scheduler_cfg, "threshold", 1e-4)),
+            threshold_mode=str(getattr(scheduler_cfg, "threshold_mode", "rel")),
+            cooldown=int(getattr(scheduler_cfg, "cooldown", 0)),
+            min_lr=float(getattr(scheduler_cfg, "min_lr", 0.0)),
+            verbose=bool(getattr(scheduler_cfg, "verbose", False)),
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "monitor": getattr(scheduler_cfg, "monitor", "val_loss"),
+                "interval": "epoch",
+                "frequency": 1,
+            },
+        }
 
     def get_age_statistics(self) -> dict:
         """Get statistics about predictions (for analysis).

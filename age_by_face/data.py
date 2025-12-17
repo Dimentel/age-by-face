@@ -101,7 +101,11 @@ def init_predict_dataset():
 
 
 def init_dataloader(
-    dataset: Dataset, batch_size: int, shuffle: bool = True, num_workers: int = 4
+    dataset: Dataset,
+    batch_size: int,
+    shuffle: bool = True,
+    num_workers: int = 4,
+    pin_memory: bool = True,
 ) -> DataLoader:
     """Initialize torch dataloader from dataset.
 
@@ -115,7 +119,11 @@ def init_dataloader(
         DataLoader instance
     """
     return DataLoader(
-        dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, pin_memory=True
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
     )
 
 
@@ -135,11 +143,12 @@ class AgeDataModule(l.LightningDataModule):
 
         # Batch sizes
         self.train_batch_size = self.cfg.train_batch_size
-        self.val_batch_size = self.cfg.predict_batch_size
-        self.test_batch_size = self.cfg.predict_batch_size
+        self.val_batch_size = getattr(self.cfg, "val_batch_size", self.cfg.predict_batch_size)
+        self.test_batch_size = getattr(self.cfg, "test_batch_size", self.cfg.predict_batch_size)
 
         # Other parameters
         self.num_workers = self.cfg.num_workers
+        self.pin_memory = bool(getattr(self.cfg, "pin_memory", True))
 
         # Image directories
         self.train_dir = self.data_dir / self.cfg.train_dir_name
@@ -189,7 +198,7 @@ class AgeDataModule(l.LightningDataModule):
                 images_dir=self.val_dir,
                 transformer=self.val_transformer,
             )
-        elif stage == "validate" or stage is None:
+        elif stage == "validate":
             if self.val_dataset is None:
                 self.val_dataset = init_dataset(
                     csv_path=self.val_csv,
@@ -211,6 +220,7 @@ class AgeDataModule(l.LightningDataModule):
             batch_size=self.train_batch_size,
             shuffle=True,
             num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -219,6 +229,7 @@ class AgeDataModule(l.LightningDataModule):
             batch_size=self.val_batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -227,6 +238,7 @@ class AgeDataModule(l.LightningDataModule):
             batch_size=self.test_batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
         )
 
     def predict_dataloader(self):

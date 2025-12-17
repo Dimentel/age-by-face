@@ -5,5 +5,3 @@
     url = s3://age-by-face-storage
     endpointurl = https://storage.yandexcloud.net
     region = ru-central1
-    access_key_id = YCAJEC-bRJwFvQ2YpurrnzIF5
-    secret_access_key = YCNLwSQ32fytH9gPiajO07g7E4OJeqBRbYRGY1US

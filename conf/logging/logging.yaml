@@ -8,7 +8,7 @@ mlflow:
   tags:
     project: "${project.name}"
     model_type: "${model.type}"
-    run_id: "${hydra:job.override_dirname,${hydra:job.name}}"
+    run_id: "{model.type}_{now:%Y-%m-%d_%H-%M-%S}"
 
   # Дополнительные настройки MLflow
   create_experiment_if_not_exists: true
