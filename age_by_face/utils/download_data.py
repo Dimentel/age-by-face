@@ -6,7 +6,7 @@ from hydra.utils import get_original_cwd, to_absolute_path
 from omegaconf import DictConfig
 
 
-def ensure_data_with_dvc(cfg: DictConfig) -> Path:
+def download_data_dvc(cfg: DictConfig) -> Path:
     """
     Make sure data is available with dvc:
     - call `dvc pull` from repo root;
