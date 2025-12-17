@@ -1,7 +1,7 @@
 # MLflow logging
 mlflow:
   enabled: true
-  tracking_uri: "http://127.0.0.1:8080"
+  tracking_uri: "http://127.0.0.1:5555"
   experiment_name: "${project.name}"
   run_name: "${model.type}_${now:%Y-%m-%d_%H-%M-%S}"
   log_model: true

@@ -100,12 +100,13 @@ def init_predict_dataset():
     raise NotImplementedError("Predict stage is not implemented yet")
 
 
-def init_dataloader(
+def init_dataloader(  # noqa: PLR0913
     dataset: Dataset,
     batch_size: int,
     shuffle: bool = True,
     num_workers: int = 4,
     pin_memory: bool = True,
+    persistent_workers: bool = False,
 ) -> DataLoader:
     """Initialize torch dataloader from dataset.
 
@@ -124,6 +125,7 @@ def init_dataloader(
         shuffle=shuffle,
         num_workers=num_workers,
         pin_memory=pin_memory,
+        persistent_workers=persistent_workers,
     )
 
 
@@ -148,6 +150,9 @@ class AgeDataModule(l.LightningDataModule):
 
         # Other parameters
         self.num_workers = self.cfg.num_workers
+        self.persistent_workers = bool(
+            getattr(self.cfg, "persistent_workers", self.num_workers > 0)
+        )
         self.pin_memory = bool(getattr(self.cfg, "pin_memory", True))
 
         # Image directories
@@ -221,6 +226,7 @@ class AgeDataModule(l.LightningDataModule):
             shuffle=True,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
+            persistent_workers=self.persistent_workers,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -230,6 +236,7 @@ class AgeDataModule(l.LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
+            persistent_workers=self.persistent_workers,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -239,6 +246,7 @@ class AgeDataModule(l.LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
+            persistent_workers=self.persistent_workers,
         )
 
     def predict_dataloader(self):

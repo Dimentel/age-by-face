@@ -211,7 +211,6 @@ class AgeRegressionModule(l.LightningModule):
             threshold_mode=str(getattr(scheduler_cfg, "threshold_mode", "rel")),
             cooldown=int(getattr(scheduler_cfg, "cooldown", 0)),
             min_lr=float(getattr(scheduler_cfg, "min_lr", 0.0)),
-            verbose=bool(getattr(scheduler_cfg, "verbose", False)),
         )
         return {
             "optimizer": optimizer,
