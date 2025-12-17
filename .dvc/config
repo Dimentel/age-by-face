@@ -2,6 +2,6 @@
     remote = faces
 
 ['remote "faces"']
-    url = s3://age-by-face-storage
+    url = http://age-by-face-storage
     endpointurl = https://storage.yandexcloud.net
     region = ru-central1
