@@ -107,6 +107,7 @@ def init_dataloader(  # noqa: PLR0913
     num_workers: int = 4,
     pin_memory: bool = True,
     persistent_workers: bool = False,
+    drop_last: bool = True,  # если последний батч 1, то батчнорм не сработает
 ) -> DataLoader:
     """Initialize torch dataloader from dataset.
 
@@ -126,6 +127,7 @@ def init_dataloader(  # noqa: PLR0913
         num_workers=num_workers,
         pin_memory=pin_memory,
         persistent_workers=persistent_workers,
+        drop_last=drop_last,
     )
 
 
@@ -169,9 +171,9 @@ class AgeDataModule(l.LightningDataModule):
 
         self.train_transformer = transforms.Compose(
             [
-                transforms.Resize(tuple(dataset_cfg.image_size)),
-                transforms.RandomRotation(degrees=dataset_cfg.random_rotation_angle),
-                transforms.RandomHorizontalFlip(p=dataset_cfg.random_horizontal_flip_prob),
+                transforms.Resize(tuple(self.cfg.image_size)),
+                transforms.RandomRotation(degrees=self.cfg.random_rotation_angle),
+                transforms.RandomHorizontalFlip(p=self.cfg.random_horizontal_flip_prob),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=dataset_cfg.normalize_means, std=dataset_cfg.normalize_stds
@@ -181,10 +183,10 @@ class AgeDataModule(l.LightningDataModule):
 
         self.val_transformer = transforms.Compose(
             [
-                transforms.Resize(tuple(dataset_cfg.image_size)),
+                transforms.Resize(tuple(self.cfg.image_size)),
                 transforms.ToTensor(),
                 transforms.Normalize(
-                    mean=dataset_cfg.normalize_means, std=dataset_cfg.normalize_stds
+                    mean=self.cfg.normalize_means, std=self.cfg.normalize_stds
                 ),  # [-1, 1] range
             ]
         )

@@ -1,5 +1,8 @@
+defaults:
+  - common
+
 # Dataset paths
-data_dir: "${oc.env:DATA_DIR,data}"
+data_dir: "${oc.env:DATA_DIR,data}/appa_real"
 train_csv: "gt_avg_train.csv"
 val_csv: "gt_avg_valid.csv"
 test_csv: "gt_avg_test.csv"
@@ -9,15 +12,6 @@ train_dir_name: "train"
 val_dir_name: "valid"
 test_dir_name: "test"
 predict_dir_name: "predict"
-
-# DataLoader parameters
-train_batch_size: 32
-val_batch_size: 64
-test_batch_size: 64
-predict_batch_size: 64
-num_workers: 4
-pin_memory: true
-persistent_workers: true
 
 # Image transformations
 image_size: [224, 224]

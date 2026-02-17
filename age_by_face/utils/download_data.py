@@ -1,8 +1,11 @@
+import logging
 from contextlib import suppress
 from pathlib import Path
 
 from dvc.repo import Repo
 from omegaconf import DictConfig
+
+logger = logging.getLogger(__name__)
 
 
 def _find_repo_root(start: Path) -> Path:
@@ -11,11 +14,7 @@ def _find_repo_root(start: Path) -> Path:
     """
     p = start
     for candidate in [p, *p.parents]:
-        if (
-            (candidate / ".dvc").exists()
-            or (candidate / "pyproject.toml").exists()
-            or (candidate / ".git").exists()
-        ):
+        if (candidate / "pyproject.toml").exists() or (candidate / ".git").exists():
             return candidate
     return start
 
@@ -33,15 +32,13 @@ def download_data_dvc(cfg: DictConfig) -> Path:
     abs_data_dir = (
         Path(data_dir_cfg) if Path(data_dir_cfg).is_absolute() else (repo_root / data_dir_cfg)
     ).resolve()
-
-    # If no dvc, just return absolute path
-    if not (repo_root / ".dvc").exists():
-        cfg.dataset.data_dir = str(abs_data_dir)
-        return abs_data_dir
+    logger.info(f"Data directory: {abs_data_dir}")
 
     # Pull all data
     with Repo(repo_root) as repo:
+        logger.info("Pulling all data with DVC...")
         repo.pull()
+        logger.info("DVC pull completed")
 
     if not abs_data_dir.exists():
         raise FileNotFoundError(f"Data directory not found after dvc pull: {abs_data_dir}")
