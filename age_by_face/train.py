@@ -37,7 +37,7 @@ def get_git_info() -> tuple[str, bool]:
 
 def train(cfg: DictConfig) -> None:
     # Reproducibility
-    l.seed_everything(int(getattr(cfg, "seed", 0)), workers=True)
+    l.seed_everything(int(getattr(cfg, "seed", 5)), workers=True)
 
     # DVC: гарантируем наличие данных локально
     download_data_dvc(cfg)

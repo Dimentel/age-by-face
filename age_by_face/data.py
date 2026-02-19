@@ -15,41 +15,29 @@ class AgeDataset(Dataset):
 
     def __init__(
         self,
-        csv_path: File,
+        df: pd.DataFrame,
         images_dir: Directory,
         transform: transforms.Compose | None = None,
     ):
         """
         Args:
-            csv_path: Path to CSV file with columns 'file_name' and 'real_age'
+            df: DataFrame containing columns with file names and ages (real or apparent)
             images_dir: Directory containing face images
             transform: Optional torchvision transforms to apply
         """
-        self.csv_path = csv_path
         self.images_dir = images_dir
-
         self.transform = transform
 
-        # Load annotations
-        self.df = pd.read_csv(csv_path)
-
-        # Validate required columns
-        required_columns = {"file_name", "real_age"}
-        if not required_columns.issubset(self.df.columns):
-            raise ValueError(f"CSV must contain columns: {required_columns}")
-
         # Create full image paths
-        self.image_paths = [
-            self.images_dir / filename for filename in self.df["file_name"] + "_face.jpg"
-        ]
+        self.image_paths = [self.images_dir / filename for filename in df.iloc[:, 0]]
 
         # Convert ages to tensors (float for regression)
-        self.ages = torch.tensor(self.df["real_age"].values, dtype=torch.float32).unsqueeze(
+        self.ages = torch.tensor(df.iloc[:, 1].values, dtype=torch.float32).unsqueeze(
             1
         )  # Shape: [n_samples, 1]
 
     def __len__(self) -> int:
-        return len(self.df)
+        return len(self.image_paths)
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         """Return (image, age) pair."""
@@ -68,13 +56,18 @@ class AgeDataset(Dataset):
 
 
 def init_dataset(
-    csv_path: File, images_dir: Directory, transformer: transforms.Compose
+    csv_path: File,
+    images_dir: Directory,
+    columns: list,
+    transformer: transforms.Compose,
+    filename_suffix: str = "",
 ) -> AgeDataset:
     """Initialize age dataset with appropriate transforms.
 
     Args:
         csv_path: Path to CSV file
         images_dir: Directory with images
+        columns: List of column names
         transformer: Optional torchvision transforms to apply
 
     Returns:
@@ -93,7 +86,16 @@ def init_dataset(
     if not images_dir.is_dir():
         raise ValueError(f"Images directory is not directory: {images_dir}")
 
-    return AgeDataset(csv_path, images_dir, transformer)
+    # Load annotations
+    df = pd.read_csv(csv_path)
+
+    # Validate required columns
+    if not set(columns).issubset(df.columns):
+        raise ValueError(f"CSV must contain columns: {columns}")
+    if filename_suffix:
+        df[columns[0]] = df[columns[0]] + filename_suffix
+
+    return AgeDataset(df[columns].copy(), images_dir, transformer)
 
 
 def init_predict_dataset():
@@ -107,7 +109,7 @@ def init_dataloader(  # noqa: PLR0913
     num_workers: int = 4,
     pin_memory: bool = True,
     persistent_workers: bool = False,
-    drop_last: bool = True,  # если последний батч 1, то батчнорм не сработает
+    drop_last: bool = True,
 ) -> DataLoader:
     """Initialize torch dataloader from dataset.
 
@@ -116,6 +118,9 @@ def init_dataloader(  # noqa: PLR0913
         batch_size: Batch size
         shuffle: Whether to shuffle dataset
         num_workers: Number of workers for dataset loading
+        pin_memory: Whether to pin memory for faster data transfer to GPU
+        persistent_workers: Whether to use persistent workers for faster data loading
+        drop_last: Whether to drop last batch if it's smaller than batch_size
 
     Returns:
         DataLoader instance
@@ -145,6 +150,14 @@ class AgeDataModule(l.LightningDataModule):
         self.val_csv = self.data_dir / self.cfg.val_csv
         self.test_csv = self.data_dir / self.cfg.test_csv
 
+        # columns
+        if self.cfg.target_age == "real":
+            self.columns = [self.cfg.file_name_col, self.cfg.real_age_col]
+        elif self.cfg.target_age == "apparent":
+            self.columns = [self.cfg.file_name_col, self.cfg.apparent_age_col]
+        else:
+            raise ValueError(f"Unknown age_to_predict: {self.cfg.target_age}")
+
         # Batch sizes
         self.train_batch_size = self.cfg.train_batch_size
         self.val_batch_size = getattr(self.cfg, "val_batch_size", self.cfg.predict_batch_size)
@@ -163,7 +176,7 @@ class AgeDataModule(l.LightningDataModule):
         self.test_dir = self.data_dir / self.cfg.test_dir_name
         self.predict_dir = self.data_dir / self.cfg.predict_dir_name
 
-        # Datasets (will be initialized in setup)
+        # Datasets
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
@@ -198,25 +211,33 @@ class AgeDataModule(l.LightningDataModule):
             self.train_dataset = init_dataset(
                 csv_path=self.train_csv,
                 images_dir=self.train_dir,
+                columns=self.columns,
                 transformer=self.train_transformer,
+                filename_suffix=self.cfg.filename_suffix,
             )
             self.val_dataset = init_dataset(
                 csv_path=self.val_csv,
                 images_dir=self.val_dir,
+                columns=self.columns,
                 transformer=self.val_transformer,
+                filename_suffix=self.cfg.filename_suffix,
             )
         elif stage == "validate":
             if self.val_dataset is None:
                 self.val_dataset = init_dataset(
                     csv_path=self.val_csv,
                     images_dir=self.val_dir,
+                    columns=self.columns,
                     transformer=self.val_transformer,
+                    filename_suffix=self.cfg.filename_suffix,
                 )
         elif stage == "test":
             self.test_dataset = init_dataset(
                 csv_path=self.test_csv,
                 images_dir=self.test_dir,
+                columns=self.columns,
                 transformer=self.val_transformer,
+                filename_suffix=self.cfg.filename_suffix,
             )
         elif stage == "predict":
             raise NotImplementedError("Predict stage is not implemented yet")

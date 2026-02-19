@@ -1,13 +1,13 @@
 defaults:
   - base
 
-name: "appa_real"
+name: "morph_2"
 
 # Dataset paths
-data_dir: "${oc.env:DATA_DIR,data}/appa_real"
-train_csv: "gt_avg_train.csv"
-val_csv: "gt_avg_valid.csv"
-test_csv: "gt_avg_test.csv"
+data_dir: "${oc.env:DATA_DIR,data}/morph_2"
+train_csv: "Train.csv"
+val_csv: "Validation.csv"
+test_csv: "Test.csv"
 
 # Image directories
 train_dir_name: "train"
@@ -16,9 +16,9 @@ test_dir_name: "test"
 predict_dir_name: "predict"
 
 # columns
-file_name_col: "file_name"
-real_age_col: "real_age"
-apparent_age_col: "apparent_age_avg"
+file_name_col: "filename"
+real_age_col: "age"
+apparent_age_col: ""
 
 # Image transformations
 normalize_means: [0.5, 0.5, 0.5]
@@ -28,4 +28,5 @@ normalize_stds: [0.5, 0.5, 0.5]
 random_rotation_angle: 15
 random_horizontal_flip_prob: 0.2
 
-filename_suffix: "_face.jpg"
+# age to predict
+target_age: "real"

@@ -1,0 +1,6 @@
+outs:
+- md5: dfb73ac3b6754792cf056890c7005c20.dir
+  size: 318842566
+  nfiles: 50018
+  hash: md5
+  path: morph_2

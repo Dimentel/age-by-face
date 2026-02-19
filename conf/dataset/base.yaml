@@ -1,10 +1,16 @@
-data_dir: "${oc.env:DATA_DIR,data}"
-
 # DataLoader parameters
-train_batch_size: 16
+train_batch_size: 32
 val_batch_size: 64
 test_batch_size: 64
 predict_batch_size: 64
 num_workers: 1
 pin_memory: true
 persistent_workers: true
+
+# Image transformations
+image_size: [224, 224]
+
+# age to predict
+target_age: "real" # or "apparent"
+
+filename_suffix: ""

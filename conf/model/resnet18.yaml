@@ -1,5 +1,6 @@
 defaults:
-  - common
+  - base
+
 # model configuration
 type: "resnet18"
 hidden_layers: [512] # list of hidden layer sizes
