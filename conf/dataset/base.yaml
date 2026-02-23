@@ -9,8 +9,12 @@ persistent_workers: true
 
 # Image transformations
 image_size: [224, 224]
+normalize_means: [0.485, 0.456, 0.406]
+normalize_stds: [0.229, 0.224, 0.225]
 
 # age to predict
 target_age: "real" # or "apparent"
 
+# special options
 filename_suffix: ""
+target_age_shift: 0

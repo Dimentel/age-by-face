@@ -6,8 +6,8 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from age_by_face.types import Directory, File
 from age_by_face.utils.path_utils import ensure_path
+from age_by_face.utils.types import Directory, File
 
 
 class AgeDataset(Dataset):
@@ -55,12 +55,13 @@ class AgeDataset(Dataset):
         return image, age
 
 
-def init_dataset(
+def init_dataset(  # noqa: PLR0913
     csv_path: File,
     images_dir: Directory,
     columns: list,
     transformer: transforms.Compose,
     filename_suffix: str = "",
+    target_age_shift: int = 0,
 ) -> AgeDataset:
     """Initialize age dataset with appropriate transforms.
 
@@ -94,6 +95,8 @@ def init_dataset(
         raise ValueError(f"CSV must contain columns: {columns}")
     if filename_suffix:
         df[columns[0]] = df[columns[0]] + filename_suffix
+    if target_age_shift:
+        df[columns[1]] = df[columns[1]] + target_age_shift
 
     return AgeDataset(df[columns].copy(), images_dir, transformer)
 
@@ -214,6 +217,7 @@ class AgeDataModule(l.LightningDataModule):
                 columns=self.columns,
                 transformer=self.train_transformer,
                 filename_suffix=self.cfg.filename_suffix,
+                target_age_shift=self.cfg.target_age_shift,
             )
             self.val_dataset = init_dataset(
                 csv_path=self.val_csv,
@@ -221,6 +225,7 @@ class AgeDataModule(l.LightningDataModule):
                 columns=self.columns,
                 transformer=self.val_transformer,
                 filename_suffix=self.cfg.filename_suffix,
+                target_age_shift=self.cfg.target_age_shift,
             )
         elif stage == "validate":
             if self.val_dataset is None:
@@ -230,6 +235,7 @@ class AgeDataModule(l.LightningDataModule):
                     columns=self.columns,
                     transformer=self.val_transformer,
                     filename_suffix=self.cfg.filename_suffix,
+                    target_age_shift=self.cfg.target_age_shift,
                 )
         elif stage == "test":
             self.test_dataset = init_dataset(
@@ -238,6 +244,7 @@ class AgeDataModule(l.LightningDataModule):
                 columns=self.columns,
                 transformer=self.val_transformer,
                 filename_suffix=self.cfg.filename_suffix,
+                target_age_shift=self.cfg.target_age_shift,
             )
         elif stage == "predict":
             raise NotImplementedError("Predict stage is not implemented yet")

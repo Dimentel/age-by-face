@@ -20,12 +20,9 @@ file_name_col: "file_name"
 real_age_col: "real_age"
 apparent_age_col: "apparent_age_avg"
 
-# Image transformations
-normalize_means: [0.5, 0.5, 0.5]
-normalize_stds: [0.5, 0.5, 0.5]
-
 # Augmentations
 random_rotation_angle: 15
 random_horizontal_flip_prob: 0.2
 
+# special options
 filename_suffix: "_face.jpg"

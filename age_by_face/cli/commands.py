@@ -6,8 +6,9 @@ from collections.abc import Sequence
 import fire
 from hydra import compose, initialize
 
-from age_by_face.infer import infer as infer_impl
-from age_by_face.train import train as train_impl
+from age_by_face.inference.evaluate import evaluate as evaluate_impl
+from age_by_face.inference.infer import infer as infer_impl
+from age_by_face.training.train import train as train_impl
 
 
 def _compose_cfg(overrides: Sequence[str] | None = None):
@@ -25,7 +26,7 @@ def _compose_cfg(overrides: Sequence[str] | None = None):
       - Compose API НЕ меняет рабочую директорию и НЕ поддерживает Hydra multirun (-m).
       - Для свипов используйте команду `sweep`, которая проксирует запуск в нативный Hydra-скрипт.
     """
-    with initialize(version_base=None, config_path="../conf"):
+    with initialize(version_base=None, config_path="../../conf"):
         return compose(config_name="config", overrides=list(overrides or []))
 
 
@@ -93,6 +94,48 @@ class Commands:
         """
         cfg = _compose_cfg(overrides)
         infer_impl(cfg)
+
+    def evaluate(self, *overrides: str, split: str = "test") -> None:
+        """Evaluate a trained model on a specified dataset split.
+
+        This command composes a Hydra configuration with the given overrides,
+        resolves the checkpoint path (best.ckpt → last.ckpt → cfg.ckpt_path),
+        and runs evaluation on the requested split.
+
+        Args:
+            *overrides: Hydra configuration overrides in "key=value" format.
+                        Examples:
+                        - "model.type=resnet50"
+                        - "training.checkpoint.dirpath=checkpoints/resnet18"
+            split: Dataset split to evaluate on. Must be one of 'train', 'val', or 'test'.
+                   Defaults to 'test'.
+
+        Raises:
+            ValueError: If split is not one of 'train', 'val', or 'test'.
+
+        Examples:
+            # Evaluate best model on test set (default)
+            age-by-face evaluate
+
+            # Evaluate on validation set
+            age-by-face evaluate split=val
+
+            # Evaluate a specific model checkpoint
+            age-by-face evaluate 'training.checkpoint.dirpath=checkpoints/resnet50' split=test
+
+            # Evaluate with different model architecture
+            age-by-face evaluate model.type=resnet50 split=val
+
+        Notes:
+            - The checkpoint resolution logic is shared with the `infer` command.
+            - Metrics are printed to console and returned via MLflow logging
+              (if enabled in the configuration).
+            - The model architecture specified in config must match the checkpoint.
+        """
+        if split not in ("train", "val", "test"):
+            raise ValueError(f"split must be 'train', 'test' or 'val', got {split}")
+        cfg = _compose_cfg(overrides)
+        evaluate_impl(cfg, split=split)
 
     def sweep(self, *overrides: str) -> int:
         """

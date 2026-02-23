@@ -243,7 +243,10 @@ cython_debug/
 !/data/*.dvc
 !/data/**/*.dvc
 
+/logs/*
+
 mlflow.db
 $checkpoints/
 checkpoints/
 mlruns/
+notebooks/*

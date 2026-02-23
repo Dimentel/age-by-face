@@ -6,18 +6,27 @@ import matplotlib.pyplot as plt
 import torch
 from omegaconf import DictConfig
 
-from age_by_face.data import AgeDataModule
-from age_by_face.model import build_model
-from age_by_face.module import AgeRegressionModule
+from age_by_face.data.dataset import AgeDataModule
+from age_by_face.models.architecture import build_model
+from age_by_face.models.module import AgeRegressionModule
 
 
 def _resolve_ckpt_path(cfg: DictConfig) -> Path:
     """
     Приоритет:
-    1) <cfg.training.checkpoint.dirpath>/best.ckpt
-    2) <cfg.training.checkpoint.dirpath>/last.ckpt
-    3) Явно заданный cfg.ckpt_path
+    1) Явно заданный cfg.ckpt_path
+    2) <cfg.training.checkpoint.dirpath>/best.ckpt
+    3) <cfg.training.checkpoint.dirpath>/last.ckpt
     """
+
+    # Проверка на явно заданный путь к чекпоинту
+    explicit = getattr(cfg, "ckpt_path", None)
+    if explicit:
+        p = Path(str(explicit))
+        if p.exists():
+            return p
+        raise FileNotFoundError(f"Указанный ckpt_path не найден: {p}")
+
     ckpt_dir = Path(str(cfg.training.checkpoint.dirpath))
     best_local = ckpt_dir / "best.ckpt"
     if best_local.exists():
@@ -27,16 +36,8 @@ def _resolve_ckpt_path(cfg: DictConfig) -> Path:
     if last_local.exists():
         return last_local
 
-    explicit = getattr(cfg, "ckpt_path", None)
-    if explicit:
-        p = Path(str(explicit))
-        if p.exists():
-            return p
-        raise FileNotFoundError(f"Указанный ckpt_path не найден: {p}")
-
     raise FileNotFoundError(
-        "best.ckpt, last.ckpt not found"
-        f"Expected: {ckpt_dir}. Or set ckpt_path=/abs/path/to/model.ckpt"
+        f"checkpoint file not foundExpected: {ckpt_dir}/best.ckpt or {ckpt_dir}/last.ckpt."
     )
 
 

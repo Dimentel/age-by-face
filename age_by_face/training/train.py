@@ -7,9 +7,9 @@ from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, Mode
 from lightning.pytorch.loggers import MLFlowLogger, TensorBoardLogger
 from omegaconf import DictConfig
 
-from age_by_face.data import AgeDataModule
-from age_by_face.model import build_model
-from age_by_face.module import AgeRegressionModule
+from age_by_face.data.dataset import AgeDataModule
+from age_by_face.models.architecture import build_model
+from age_by_face.models.module import AgeRegressionModule
 from age_by_face.utils.download_data import download_data_dvc
 
 
@@ -52,7 +52,6 @@ def train(cfg: DictConfig) -> None:
     # Logger (MLflow if used)
     # Git info
     git_commit, git_dirty = get_git_info()
-    logger = None
     mlf_logger = None
     log_cfg = getattr(cfg, "logging", None)
     if log_cfg and hasattr(log_cfg, "mlflow") and bool(getattr(log_cfg.mlflow, "enabled", False)):
@@ -100,7 +99,9 @@ def train(cfg: DictConfig) -> None:
             save_last=bool(getattr(ckpt_cfg, "save_last", True)),
             every_n_epochs=int(getattr(ckpt_cfg, "every_n_epochs", 1)),
             dirpath=str(getattr(ckpt_cfg, "dirpath", "checkpoints")),
-            filename=str(getattr(ckpt_cfg, "filename", "epoch={epoch}-val_loss={val_loss:.2f}")),
+            filename=str(
+                getattr(ckpt_cfg, "filename", "{cfg.dataset.target_age}_{epoch}-{val_loss:.2f}")
+            ),
         )
         callbacks.append(ckpt_cb)
 

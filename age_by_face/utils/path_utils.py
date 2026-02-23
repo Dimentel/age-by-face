@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from age_by_face.types import Directory, File
+from age_by_face.utils.types import Directory, File
 
 
 def ensure_path(path: Directory | File) -> Path:

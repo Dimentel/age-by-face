@@ -10,9 +10,9 @@ val_csv: "Validation.csv"
 test_csv: "Test.csv"
 
 # Image directories
-train_dir_name: "train"
-val_dir_name: "valid"
-test_dir_name: "test"
+train_dir_name: "Train"
+val_dir_name: "Validation"
+test_dir_name: "Test"
 predict_dir_name: "predict"
 
 # columns
@@ -20,13 +20,12 @@ file_name_col: "filename"
 real_age_col: "age"
 apparent_age_col: ""
 
-# Image transformations
-normalize_means: [0.5, 0.5, 0.5]
-normalize_stds: [0.5, 0.5, 0.5]
-
 # Augmentations
 random_rotation_angle: 15
 random_horizontal_flip_prob: 0.2
 
 # age to predict
 target_age: "real"
+
+# special options
+target_age_shift: 16
