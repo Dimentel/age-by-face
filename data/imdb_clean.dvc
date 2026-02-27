@@ -1,0 +1,6 @@
+outs:
+- md5: 0d99d57d5cd63b72bd82a658eafbafd0.dir
+  size: 4149789520
+  nfiles: 190301
+  hash: md5
+  path: imdb_clean
