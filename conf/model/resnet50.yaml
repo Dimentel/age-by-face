@@ -3,4 +3,5 @@ defaults:
 
 # model configuration
 type: "resnet50"
+pretrained: true
 hidden_layers: [2048] # list of hidden layer sizes

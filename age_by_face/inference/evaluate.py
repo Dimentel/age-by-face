@@ -50,9 +50,6 @@ def evaluate(
         - Metrics are computed using the test_step method of AgeRegressionModule
     """
 
-    print(f"DEBUG: cfg.ckpt_path = {getattr(cfg, 'ckpt_path', None)}")
-    print(f"DEBUG: cfg.training.checkpoint.dirpath = {cfg.training.checkpoint.dirpath}")
-
     # Setup datamodule
     datamodule = AgeDataModule(cfg.dataset)
 
@@ -69,7 +66,6 @@ def evaluate(
 
     # Путь к чекпойнту: best.ckpt -> last.ckpt -> cfg.ckpt_path
     checkpoint_path = _resolve_ckpt_path(cfg)
-    print(f"DEBUG: resolved path = {checkpoint_path}")
 
     if verbose:
         print(f"Loading model from: {checkpoint_path}")

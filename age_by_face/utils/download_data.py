@@ -1,5 +1,5 @@
 import logging
-from contextlib import suppress
+import subprocess
 from pathlib import Path
 
 from dvc.repo import Repo
@@ -19,6 +19,15 @@ def _find_repo_root(start: Path) -> Path:
     return start
 
 
+def _data_is_up_to_date(repo_root: Path) -> bool:
+    """Check if data is up to date with dvc."""
+    result = subprocess.run(
+        ["dvc", "status"], check=False, cwd=repo_root, capture_output=True, text=True
+    )
+
+    return "Data and pipelines are up to date" in result.stdout
+
+
 def download_data_dvc(cfg: DictConfig) -> Path:
     """
     Make sure data is available with dvc:
@@ -34,16 +43,15 @@ def download_data_dvc(cfg: DictConfig) -> Path:
     ).resolve()
     logger.info(f"Data directory: {abs_data_dir}")
 
+    # Fast check with dvc status
+    if _data_is_up_to_date(repo_root):
+        logger.info("Data is up to date with DVC")
+        return abs_data_dir
+
     # Pull all data
     with Repo(repo_root) as repo:
         logger.info("Pulling all data with DVC...")
         repo.pull()
         logger.info("DVC pull completed")
-
-    if not abs_data_dir.exists():
-        raise FileNotFoundError(f"Data directory not found after dvc pull: {abs_data_dir}")
-    # Pass if data_dir is already absolute
-    with suppress(Exception):
-        cfg.dataset.data_dir = str(abs_data_dir)
 
     return abs_data_dir
