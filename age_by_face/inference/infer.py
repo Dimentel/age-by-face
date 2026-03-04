@@ -20,12 +20,12 @@ def _resolve_ckpt_path(cfg: DictConfig) -> Path:
     """
 
     # Проверка на явно заданный путь к чекпоинту
-    explicit = getattr(cfg, "ckpt_path", None)
+    explicit = getattr(cfg.model, "checkpoint_path", None)
     if explicit:
         p = Path(str(explicit))
         if p.exists():
             return p
-        raise FileNotFoundError(f"Указанный ckpt_path не найден: {p}")
+        raise FileNotFoundError(f"Указанный checkpoint_path не найден: {p}")
 
     ckpt_dir = Path(str(cfg.training.checkpoint.dirpath))
     best_local = ckpt_dir / "best.ckpt"
