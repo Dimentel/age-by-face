@@ -1,9 +1,4 @@
 freeze_backbone: false
-dropout_rate: 0.3
-use_batch_norm: true
-activation: "relu"
 output_dim: 1
-output_activation: "relu"
-init_method: "kaiming"
 # If provided, loads weights from checkpoint path to fine-tune
 checkpoint_path: null

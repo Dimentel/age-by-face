@@ -1,0 +1,28 @@
+defaults:
+  - base
+
+name: "imdb_clean"
+
+# Dataset paths
+data_dir: "${oc.env:DATA_DIR,data}/imdb_clean"
+train_csv: "imdb_train.csv"
+val_csv: "imdb_valid.csv"
+test_csv: "imdb_test.csv"
+
+# Image directories
+train_dir_name: "train"
+val_dir_name: "valid"
+test_dir_name: "test"
+predict_dir_name: "predict"
+
+# columns
+file_name_col: "filename"
+real_age_col: "age"
+apparent_age_col: ""
+
+# Augmentations
+random_rotation_angle: 15
+random_horizontal_flip_prob: 0.2
+
+# age to predict
+target_age: "real"

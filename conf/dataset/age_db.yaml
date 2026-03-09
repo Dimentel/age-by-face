@@ -1,0 +1,28 @@
+defaults:
+  - base
+
+name: "age_db"
+
+# Dataset paths
+data_dir: "${oc.env:DATA_DIR,data}/age_db"
+train_csv: "age_db_train.csv"
+val_csv: "age_db_valid.csv"
+test_csv: "age_db_test.csv"
+
+# Image directories
+train_dir_name: "train"
+val_dir_name: "valid"
+test_dir_name: "test"
+predict_dir_name: "predict"
+
+# columns
+file_name_col: "filename"
+real_age_col: "age"
+apparent_age_col: ""
+
+# Augmentations
+random_rotation_angle: 15
+random_horizontal_flip_prob: 0.2
+
+# age to predict
+target_age: "real"

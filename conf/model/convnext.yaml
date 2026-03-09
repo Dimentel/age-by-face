@@ -1,0 +1,27 @@
+defaults:
+  - base
+
+# Model type identifier
+type: "convnext"
+
+# Input channels
+in_chans: 3
+
+# Architecture parameters (defaults for tiny variant)
+depths: [3, 3, 9, 3]
+dims: [96, 192, 384, 768]
+
+# Regularization
+drop_path_rate: 0.0
+layer_scale_init_value: 1e-6
+head_init_scale: 1.0
+
+# Hidden layer size (if None, uses single linear layer)
+# for checkpoint with FC2 (two linear layers), set to 256
+fc: 256
+# For reference: different ConvNeXt variants
+# tiny:   depths=[3,3,9,3],   dims=[96,192,384,768]
+# small:  depths=[3,3,27,3],  dims=[96,192,384,768]
+# base:   depths=[3,3,27,3],  dims=[128,256,512,1024]
+# large:  depths=[3,3,27,3],  dims=[192,384,768,1536]
+# xlarge: depths=[3,3,27,3],  dims=[256,512,1024,2048]

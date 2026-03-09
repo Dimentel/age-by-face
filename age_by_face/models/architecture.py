@@ -1,6 +1,7 @@
 from omegaconf import DictConfig
 from torch import nn
 
+from age_by_face.models.convnext import AgeConvNeXt
 from age_by_face.models.resnet import AgeResNet18, AgeResNet50
 
 # Future models will be imported here
@@ -17,6 +18,8 @@ def build_model(model_cfg: DictConfig) -> nn.Module:
         model = AgeResNet18.from_cfg(model_cfg)
     elif model_type == "resnet50":
         model = AgeResNet50.from_cfg(model_cfg)
+    elif model_type == "convnext":
+        model = AgeConvNeXt.from_cfg(model_cfg)
     # Future models will be added here with elif
     else:
         raise ValueError(f"Unknown model type: {model_type}")
