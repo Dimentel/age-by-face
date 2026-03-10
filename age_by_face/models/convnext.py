@@ -187,6 +187,7 @@ class AgeConvNeXt(nn.Module):
         layer_scale_init_value: float = 1e-6,
         head_init_scale: float = 1.0,
         fc_hidden_size: int = 256,  # size of hidden layer, if None uses single linear layer
+        output_activation: str | None = "relu",
     ):
         super().__init__()
 
@@ -213,15 +214,25 @@ class AgeConvNeXt(nn.Module):
 
         # Regression head
         if fc_hidden_size:
+            if output_activation:
+                self.fc = nn.Sequential(
+                    nn.Linear(self.output_size[-1], fc_hidden_size),
+                    nn.Linear(fc_hidden_size, num_classes),
+                    nn.ReLU(inplace=True),
+                )
+            else:
+                self.fc = nn.Sequential(
+                    nn.Linear(self.output_size[-1], fc_hidden_size),
+                    nn.Linear(fc_hidden_size, num_classes),
+                )
+        elif output_activation:
             self.fc = nn.Sequential(
-                nn.Linear(self.output_size[-1], fc_hidden_size),
-                nn.Linear(fc_hidden_size, num_classes),
+                nn.Linear(self.output_size[-1], num_classes),
                 nn.ReLU(inplace=True),
             )
         else:
             self.fc = nn.Sequential(
                 nn.Linear(self.output_size[-1], num_classes),
-                nn.ReLU(inplace=True),
             )
 
     @classmethod
@@ -236,6 +247,7 @@ class AgeConvNeXt(nn.Module):
             layer_scale_init_value=cfg.get("layer_scale_init_value", 1e-6),
             head_init_scale=cfg.get("head_init_scale", 1.0),
             fc_hidden_size=cfg.get("fc", 256),
+            output_activation=cfg.get("output_activation", None),  # null, "relu"
         )
 
     def forward_features(self, x):

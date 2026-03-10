@@ -2,6 +2,7 @@ from omegaconf import DictConfig
 from torch import nn
 
 from age_by_face.models.convnext import AgeConvNeXt
+from age_by_face.models.hybrid import AgeHybridModel
 from age_by_face.models.resnet import AgeResNet18, AgeResNet50
 from age_by_face.models.transformer import AgeTransformer
 
@@ -23,6 +24,8 @@ def build_model(model_cfg: DictConfig) -> nn.Module:
         model = AgeConvNeXt.from_cfg(model_cfg)
     elif model_type == "transformer":
         model = AgeTransformer.from_cfg(model_cfg)
+    elif model_type == "hybrid":
+        model = AgeHybridModel.from_cfg(model_cfg)
     # Future models will be added here with elif
     else:
         raise ValueError(f"Unknown model type: {model_type}")

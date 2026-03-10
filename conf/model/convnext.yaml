@@ -19,6 +19,13 @@ head_init_scale: 1.0
 # Hidden layer size (if None, uses single linear layer)
 # for checkpoint with FC2 (two linear layers), set to 256
 fc: 256
+
+# Pretrained weights
+weights: null
+
+# Output activation (null for no activation, "relu" for ReLU)
+output_activation: "relu" # null или "relu"
+
 # For reference: different ConvNeXt variants
 # tiny:   depths=[3,3,9,3],   dims=[96,192,384,768]
 # small:  depths=[3,3,27,3],  dims=[96,192,384,768]

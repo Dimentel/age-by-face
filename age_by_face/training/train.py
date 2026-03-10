@@ -11,6 +11,7 @@ from age_by_face.data.dataset import AgeDataModule
 from age_by_face.models.architecture import build_model
 from age_by_face.models.module import AgeRegressionModule
 from age_by_face.utils.backbone import freeze_backbone
+from age_by_face.utils.checkpoint_utils import load_model
 from age_by_face.utils.download_data import download_data_dvc
 
 
@@ -42,10 +43,7 @@ def _create_module(cfg: DictConfig) -> AgeRegressionModule:
 
     if checkpoint_path and Path(checkpoint_path).exists():
         print(f"Fine-tuning mode: loading from {checkpoint_path}")
-        model = build_model(cfg.model)
-        module = AgeRegressionModule.load_from_checkpoint(
-            checkpoint_path=str(checkpoint_path), model=model, cfg=cfg, map_location="cpu"
-        )
+        module = load_model(cfg, checkpoint_path)
         # Update hyperparameters
         module.hparams["optimizer"] = {
             "lr": float(cfg.training.optimizer.lr),

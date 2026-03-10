@@ -6,8 +6,7 @@ from omegaconf import DictConfig
 
 from age_by_face.data.dataset import AgeDataModule
 from age_by_face.inference.infer import _resolve_ckpt_path
-from age_by_face.models.architecture import build_model
-from age_by_face.models.module import AgeRegressionModule
+from age_by_face.utils.checkpoint_utils import load_model
 
 
 def evaluate(
@@ -70,16 +69,8 @@ def evaluate(
     if verbose:
         print(f"Loading model from: {checkpoint_path}")
 
-    # Build model architecture
-    model = build_model(cfg.model)
-
     # Load checkpoint
-    module = AgeRegressionModule.load_from_checkpoint(
-        checkpoint_path=str(checkpoint_path),
-        model=model,
-        cfg=cfg,
-        map_location="cpu",
-    )
+    module = load_model(cfg, checkpoint_path)
     logger = (
         CSVLogger(
             "logs",

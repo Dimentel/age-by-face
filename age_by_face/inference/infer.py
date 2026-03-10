@@ -97,7 +97,7 @@ def infer(cfg: DictConfig) -> None:
     # Восстановление модуля из чекпоинта
     model = build_model(cfg.model)
     module = AgeRegressionModule.load_from_checkpoint(
-        str(ckpt_path), model=model, cfg=cfg, map_location="cpu"
+        checkpoint_path=str(ckpt_path), model=model, cfg=cfg, map_location="cpu"
     )
     module.eval()
 

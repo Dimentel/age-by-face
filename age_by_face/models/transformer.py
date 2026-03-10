@@ -26,7 +26,8 @@ class AgeTransformer(nn.Module):
         backbone: str = "vit_tiny_patch16_224",
         pretrained: bool = True,
         num_classes: int = 1,
-        fc: int = 128,  # size of hidden layer (None for single linear layer)
+        fc_hidden_size: int = 128,  # size of hidden layer (None for single linear layer)
+        output_activation: str | None = "relu",
     ):
         super().__init__()
 
@@ -39,19 +40,31 @@ class AgeTransformer(nn.Module):
 
         self.output_size = [self.vit.head.in_features]
 
-        # Regression head (FC2 architecture with hidden layer)
-        if fc:
+        # Regression head
+        if fc_hidden_size:
+            if output_activation:
+                self.vit.head = nn.Sequential(
+                    nn.LayerNorm(self.output_size[-1]),
+                    nn.Linear(self.output_size[-1], fc_hidden_size),
+                    nn.Linear(fc_hidden_size, num_classes),
+                    nn.ReLU(inplace=True),
+                )
+            else:
+                self.vit.head = nn.Sequential(
+                    nn.LayerNorm(self.output_size[-1]),
+                    nn.Linear(self.output_size[-1], fc_hidden_size),
+                    nn.Linear(fc_hidden_size, num_classes),
+                )
+        elif output_activation:
             self.vit.head = nn.Sequential(
                 nn.LayerNorm(self.output_size[-1]),
-                nn.Linear(self.output_size[-1], fc),
-                nn.Linear(fc, num_classes),
+                nn.Linear(self.output_size[-1], num_classes),
                 nn.ReLU(inplace=True),
             )
         else:
             self.vit.head = nn.Sequential(
                 nn.LayerNorm(self.output_size[-1]),
                 nn.Linear(self.output_size[-1], num_classes),
-                nn.ReLU(inplace=True),
             )
 
         # Initialize head
@@ -75,7 +88,8 @@ class AgeTransformer(nn.Module):
             backbone=cfg.get("backbone", "vit_tiny_patch16_224"),
             pretrained=cfg.get("pretrained", True),
             num_classes=cfg.get("output_dim", 1),
-            fc=cfg.get("fc", 128),
+            fc_hidden_size=cfg.get("fc", 128),
+            output_activation=cfg.get("output_activation", None),  # null, "relu"
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

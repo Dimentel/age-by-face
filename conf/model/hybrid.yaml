@@ -1,0 +1,10 @@
+defaults:
+  - base
+  - convnext@convnext
+  - transformer@transformer
+
+# Model type identifier
+type: "hybrid"
+
+convnext:
+  output_activation: null

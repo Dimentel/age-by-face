@@ -1,4 +1,3 @@
-# conf/model/transformer.yaml
 defaults:
   - base
 
@@ -13,6 +12,13 @@ pretrained: true
 
 # Hidden layer size (FC2 architecture)
 fc: 128
+
+# Pretrained weights
+weights: null
+
+# Output activation (null for no activation, "relu" for ReLU)
+output_activation: "relu" # null или "relu"
+
 # Common ViT backbones available in timm:
 # - vit_tiny_patch16_224  (smallest, ~5M params)
 # - vit_small_patch16_224 (~22M params)
