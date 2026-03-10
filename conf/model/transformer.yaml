@@ -1,0 +1,21 @@
+# conf/model/transformer.yaml
+defaults:
+  - base
+
+# Model type identifier
+type: "transformer"
+
+# Backbone architecture (timm model name)
+backbone: "vit_tiny_patch16_224"
+
+# Pretrained weights from timm
+pretrained: true
+
+# Hidden layer size (FC2 architecture)
+fc: 128
+# Common ViT backbones available in timm:
+# - vit_tiny_patch16_224  (smallest, ~5M params)
+# - vit_small_patch16_224 (~22M params)
+# - vit_base_patch16_224  (~86M params)
+# - vit_large_patch16_224 (~307M params)
+# Also available with patch_size=32 and different image sizes

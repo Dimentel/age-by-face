@@ -216,9 +216,13 @@ class AgeConvNeXt(nn.Module):
             self.fc = nn.Sequential(
                 nn.Linear(self.output_size[-1], fc_hidden_size),
                 nn.Linear(fc_hidden_size, num_classes),
+                nn.ReLU(inplace=True),
             )
         else:
-            self.fc = nn.Sequential(nn.Linear(self.output_size[-1], num_classes))
+            self.fc = nn.Sequential(
+                nn.Linear(self.output_size[-1], num_classes),
+                nn.ReLU(inplace=True),
+            )
 
     @classmethod
     def from_cfg(cls, cfg: DictConfig) -> "AgeConvNeXt":

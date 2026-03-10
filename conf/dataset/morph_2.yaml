@@ -24,6 +24,10 @@ apparent_age_col: ""
 random_rotation_angle: 15
 random_horizontal_flip_prob: 0.2
 
+# Image transformations
+normalize_means: [0.5, 0.5, 0.5]
+normalize_stds: [0.5, 0.5, 0.5]
+
 # age to predict
 target_age: "real"
 
