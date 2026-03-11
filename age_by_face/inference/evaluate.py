@@ -1,5 +1,3 @@
-from typing import Literal
-
 import lightning as l
 from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig
@@ -9,11 +7,7 @@ from age_by_face.inference.infer import _resolve_ckpt_path
 from age_by_face.utils.checkpoint_utils import load_model
 
 
-def evaluate(
-    cfg: DictConfig,
-    split: Literal["train", "val", "test"] = "test",
-    verbose: bool = True,
-) -> dict[str, float]:
+def evaluate(cfg: DictConfig) -> dict[str, float]:
     """
     Evaluate a trained model on a specified dataset split.
 
@@ -23,9 +17,6 @@ def evaluate(
 
     Args:
         cfg: Hydra configuration object containing model, data, and checkpoint settings.
-        split: Which dataset split to evaluate on. Must be one of "train", "val", or "test".
-               Defaults to "test".
-        verbose: If True, prints progress bar and final results. Defaults to True.
 
     Returns:
         Dictionary containing evaluation metrics. Typical keys include:
@@ -34,13 +25,6 @@ def evaluate(
         - 'test_mape': Mean Absolute Percentage Error
         - 'test_mse': Mean Squared Error
         (keys may be prefixed with 'test' regardless of split due to Lightning's test step)
-
-    Example:
-        >>> from hydra import compose, initialize
-        >>> with initialize(config_path="../conf"):
-        ...     cfg = compose(config_name="config")
-        >>> metrics = evaluate(cfg, split="val")
-        >>> print(f"Validation MAE: {metrics['test_mae']:.2f}")
 
     Notes:
         - The checkpoint path is resolved using _resolve_ckpt_path from infer module:
@@ -52,6 +36,8 @@ def evaluate(
     # Setup datamodule
     datamodule = AgeDataModule(cfg.dataset)
 
+    split = cfg.eval.split
+    verbose = cfg.eval.verbose
     # Setup appropriate split
     if split == "train":
         datamodule.setup("fit")

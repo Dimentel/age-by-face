@@ -3,6 +3,7 @@ defaults:
   - model: resnet18
   - training: training
   - logging: logging
+  - eval: evaluation
   - _self_
 
   # Глобальные настройки

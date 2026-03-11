@@ -95,7 +95,7 @@ class Commands:
         cfg = _compose_cfg(overrides)
         infer_impl(cfg)
 
-    def evaluate(self, *overrides: str, split: str = "test") -> None:
+    def evaluate(self, *overrides: str) -> None:
         """Evaluate a trained model on a specified dataset split.
 
         This command composes a Hydra configuration with the given overrides,
@@ -107,24 +107,24 @@ class Commands:
                         Examples:
                         - "model.type=resnet50"
                         - "training.checkpoint.dirpath=checkpoints/resnet18"
-            split: Dataset split to evaluate on. Must be one of 'train', 'val', or 'test'.
-                   Defaults to 'test'.
-
-        Raises:
-            ValueError: If split is not one of 'train', 'val', or 'test'.
+                        - eval.split="val"
+                        - eval.split="train"
 
         Examples:
             # Evaluate best model on test set (default)
             age-by-face evaluate
 
             # Evaluate on validation set
-            age-by-face evaluate split=val
+            age-by-face evaluate eval.split="val"
 
             # Evaluate a specific model checkpoint
-            age-by-face evaluate 'training.checkpoint.dirpath=checkpoints/resnet50' split=test
+            uv run age-by-face evaluate `
+            >>     model=transformer `
+            >>     dataset=morph_2 `
+            >> "model.checkpoint_path='checkpoints/transformer_paper.ckpt'"
 
             # Evaluate with different model architecture
-            age-by-face evaluate model.type=resnet50 split=val
+            age-by-face evaluate model=resnet50
 
         Notes:
             - The checkpoint resolution logic is shared with the `infer` command.
@@ -132,10 +132,8 @@ class Commands:
               (if enabled in the configuration).
             - The model architecture specified in config must match the checkpoint.
         """
-        if split not in ("train", "val", "test"):
-            raise ValueError(f"split must be 'train', 'test' or 'val', got {split}")
         cfg = _compose_cfg(overrides)
-        evaluate_impl(cfg, split=split)
+        evaluate_impl(cfg)
 
     def sweep(self, *overrides: str) -> int:
         """

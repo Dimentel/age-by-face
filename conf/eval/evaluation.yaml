@@ -1,0 +1,2 @@
+split: "test" # "train", "val"
+verbose: true
