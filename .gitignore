@@ -246,7 +246,7 @@ cython_debug/
 /logs/*
 
 mlflow.db
-$checkpoints/
-checkpoints/
+/checkpoints/*
+!/checkpoints/.gitkeep
 mlruns/
 notebooks/*
