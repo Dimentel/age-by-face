@@ -2,7 +2,7 @@ import lightning as l
 import pandas as pd
 import torch
 from omegaconf import DictConfig
-from PIL import Image
+from PIL import Image, ImageFile
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
@@ -41,10 +41,14 @@ class AgeDataset(Dataset):
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         """Return (image, age) pair."""
-        # Load image
-        img_path = self.image_paths[idx]
-        image = Image.open(img_path).convert("RGB")
-
+        try:
+            # Load image
+            img_path = self.image_paths[idx]
+            image = Image.open(img_path).convert("RGB")
+        except Exception:
+            ImageFile.LOAD_TRUNCATED_IMAGES = True
+            image = Image.open(img_path).convert("RGB")
+            ImageFile.LOAD_TRUNCATED_IMAGES = False
         # Apply transforms if provided
         if self.transform:
             image = self.transform(image)

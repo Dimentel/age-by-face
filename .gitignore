@@ -249,4 +249,5 @@ mlflow.db
 /checkpoints/*
 !/checkpoints/.gitkeep
 mlruns/
+mlartifacts/
 notebooks/*

@@ -5,7 +5,7 @@ test_batch_size: 64
 predict_batch_size: 64
 num_workers: 1
 pin_memory: true
-persistent_workers: true
+persistent_workers: false
 
 # Image transformations
 image_size: [224, 224]
