@@ -1,0 +1,25 @@
+defaults:
+  - base
+
+name: "mixed"
+
+# Dataset paths
+data_dir: "${oc.env:DATA_DIR,data}/mixed"
+train_csv: "train.csv"
+val_csv: "valid.csv"
+test_csv: "test.csv"
+
+# Image directories
+train_dir_name: "../"
+val_dir_name: "../"
+test_dir_name: "../"
+predict_dir_name: "../"
+
+# columns
+file_name_col: "file_path"
+real_age_col: "real_age"
+apparent_age_col: "apparent_age_avg"
+
+# Augmentations
+random_rotation_angle: 15
+random_horizontal_flip_prob: 0.2
