@@ -220,11 +220,6 @@ main() {
     echo ""
     echo "Результаты сохранены в:"
     echo "  - $RESULTS_CSV"
-
-    # Show summary of results for test splits
-    echo -e "\n${YELLOW}СВОДКА ПО ТЕСТОВЫМ СПЛИТАМ (MAE):${NC}"
-    echo "----------------------------------------"
-    column -s, -t < "$RESULTS_CSV" | grep ",test," | sort -t, -k3 -n | head -20
 }
 
 main "$@"
