@@ -11,7 +11,7 @@ declare -A BATCH_SIZES=(
     ["resnet50_mixed"]=256
     ["convnext_paper_mixed"]=256
     ["transformer_paper_mixed"]=512
-    ["hybrid_paper_mixed"]=256
+    ["hybrid_paper_mixed"]=128
 )
 
 # Model key (in script) -> model type

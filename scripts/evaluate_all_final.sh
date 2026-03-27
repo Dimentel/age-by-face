@@ -18,30 +18,35 @@ declare -A VAL_BATCHES=(
     ["resnet18_cacd"]=1024
     ["resnet18_imdb_clean"]=512
     ["resnet18_morph_2"]=1024
+    ["resnet18_mixed"]=1024
 
     ["resnet50_age_db"]=256
     ["resnet50_appa_real"]=256
     ["resnet50_cacd"]=512
     ["resnet50_imdb_clean"]=256
     ["resnet50_morph_2"]=512
+    ["resnet50_mixed"]=512
 
     ["convnext_paper_age_db"]=256
     ["convnext_paper_appa_real"]=128
     ["convnext_paper_cacd"]=512
     ["convnext_paper_imdb_clean"]=256
     ["convnext_paper_morph_2"]=512
+    ["convnext_paper_mixed"]=512
 
     ["transformer_paper_age_db"]=512
     ["transformer_paper_appa_real"]=512
     ["transformer_paper_cacd"]=1024
     ["transformer_paper_imdb_clean"]=512
     ["transformer_paper_morph_2"]=1024
+    ["transformer_paper_mixed"]=1024
 
     ["hybrid_paper_age_db"]=128
     ["hybrid_paper_appa_real"]=128
     ["hybrid_paper_cacd"]=256
     ["hybrid_paper_imdb_clean"]=128
     ["hybrid_paper_morph_2"]=256
+    ["hybrid_paper_mixed"]=256
 )
 
 # Models
@@ -54,16 +59,16 @@ declare -A MODEL_TYPES=(
 )
 
 # Datasets
-DATASETS=("cacd" "imdb_clean" "morph_2" "age_db" "appa_real")
+DATASETS=("cacd" "imdb_clean" "morph_2" "age_db" "appa_real" "mixed")
 SPLITS=("train" "val" "test")
 
 # Checkpoints to evaluate
 MODEL_CHECKPOINTS=(
-    "resnet18=checkpoints/resnet18_pretrained.ckpt"
-    "resnet50=checkpoints/resnet50_pretrained.ckpt"
-    "convnext_paper=checkpoints/convnext_paper.ckpt"
-    "transformer_paper=checkpoints/transformer_paper.ckpt"
-    "hybrid_paper=checkpoints/hybrid_paper.ckpt"
+    "resnet18=checkpoints/resnet18_all_data.ckpt"
+    "resnet50=checkpoints/resnet50_all_data.ckpt"
+    "convnext_paper=checkpoints/convnext_paper_all_data.ckpt"
+    "transformer_paper=checkpoints/transformer_paper_all_data.ckpt"
+    "hybrid_paper=checkpoints/hybrid_paper_all_data.ckpt"
 )
 
 # Function to get batch size
@@ -122,9 +127,9 @@ evaluate_model() {
 
     # Set number of samples based on dataset and split
     case "$dataset:$split" in
-        "cacd:train") num_samples=111984 ;;
-        "cacd:val") num_samples=19696 ;;
-        "cacd:test") num_samples=23235 ;;
+        "cacd:train") num_samples=108817 ;;
+        "cacd:val") num_samples=19046 ;;
+        "cacd:test") num_samples=22518 ;;
         "imdb_clean:train") num_samples=122287 ;;
         "imdb_clean:val") num_samples=30732 ;;
         "imdb_clean:test") num_samples=37276 ;;
@@ -134,10 +139,12 @@ evaluate_model() {
         "age_db:train") num_samples=12959 ;;
         "age_db:val") num_samples=1625 ;;
         "age_db:test") num_samples=1904 ;;
-        "appa_real:train") num_samples=4113 ;;
-        "appa_real:val") num_samples=1500 ;;
-        "appa_real:test") num_samples=1978 ;;
-        *) num_samples=1000 ;;
+        "appa_real:train") num_samples=3662 ;;
+        "appa_real:val") num_samples=1357 ;;
+        "appa_real:test") num_samples=1666 ;;
+        "mixed:train") num_samples=287737 ;;
+        "mixed:val") num_samples=57761 ;;
+        "mixed:test") num_samples=68366 ;;        *) num_samples=1000 ;;
     esac
 
     start_time=$(date +%s.%N)

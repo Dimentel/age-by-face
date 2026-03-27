@@ -25,9 +25,17 @@ def load_model(cfg: DictConfig, checkpoint_path: str) -> AgeRegressionModule:
         adapted_state_dict = {}
         for k, v in state_dict.items():
             # model. + model.ConvNeXt... = model.model.ConvNeXt...
-            new_k = "model." + k if k.startswith("model.") else k
+            if k.startswith("model.model.model."):
+                new_k = "model.model." + k[18:]  # убираем один 'model.'
+            elif k.startswith("model.model."):
+                # model.model. - ok
+                new_k = k
+            elif k.startswith("model."):
+                # model. -> model.model.
+                new_k = "model." + k
+            else:
+                new_k = k
             adapted_state_dict[new_k] = v
-
         module = AgeRegressionModule(model=model, cfg=cfg)
         module.load_state_dict(adapted_state_dict)
 

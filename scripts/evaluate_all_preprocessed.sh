@@ -92,7 +92,7 @@ extract_metrics_from_log() {
     fi
 
     # Get last line test_loss, test_mae, test_mape, test_mse (columns 3-6)
-    tail -1 "$csv_file" | awk -F, '{print $3","$4","$5","$6}'
+    tail -1 "$csv_file" | awk -F, '{printf "%s,%s,%s,%s", $3,$4,$5,$6}'
 }
 
 # Function to evaluate model
